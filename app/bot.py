@@ -4,7 +4,7 @@ from aiovk import API, ImplicitSession
 from aiovk.longpoll import LongPoll
 import os
 
-app_id = int(os.environ.get('LOGIN', 0))
+app_id = int(os.environ.get('APP_ID', 0))
 
 
 class NotConferenceException(Exception):
