@@ -2,7 +2,9 @@ from collections import defaultdict
 from random import randint
 from aiovk import API, ImplicitSession
 from aiovk.longpoll import LongPoll
-import settings
+import os
+
+app_id = int(os.environ.get('LOGIN', 0))
 
 
 class NotConferenceException(Exception):
@@ -73,7 +75,7 @@ class Bot2:
     async def auth(self):
         self._session = ImplicitSession(self.login,
                                         self.password,
-                                        settings.APP_ID,
+                                        app_id,
                                         scope='messages')
         await self._session.authorize()
         self._api = API(self._session)
