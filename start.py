@@ -1,16 +1,18 @@
 import asyncio
 from app.bot import Bot2
-import settings
 import random
 import re
 import functools
-
+import os
 
 dice_regexp = r'(\d+)[d|д](\d+)\s*([\+|-]\d+)?'
 
 
 async def func2():
-    bot = await Bot2.create(settings.LOGIN, settings.PASSWORD)
+    login = os.environ.get('LOGIN', '')
+    password = os.environ.get('PASSWORD', '')
+
+    bot = await Bot2.create(login, password)
 
     async def handler(message):
         message_text = message['message'].lower()
