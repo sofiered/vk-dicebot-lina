@@ -28,7 +28,6 @@ async def func2():
         parse_result = re.findall(dice_regexp, message_text)
 
         if message_text.startswith('бот'):
-            print(bot.is_cheating)
             cheat = bool('ч' in message_text and bot.is_cheating)
             if 'дайс' in message_text:
                 await bot.send_message(
