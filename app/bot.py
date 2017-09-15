@@ -43,6 +43,7 @@ class Bot2:
     def __init__(self, login, password):
         self.login = login
         self.password = password
+        self.is_cheating = False
 
     @staticmethod
     async def create(login, password):
@@ -62,6 +63,9 @@ class Bot2:
         if peer_id < self.CONF_PEER_MODIFIER:
             raise NotConferenceException
         return peer_id - self.CONF_PEER_MODIFIER
+
+    def cheat_switch(self):
+        self.is_cheating = not self.is_cheating
 
     async def set_account_id(self):
         self._id = (await self._api.utils.resolveScreenName(

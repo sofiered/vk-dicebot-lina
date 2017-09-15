@@ -11,15 +11,22 @@ dice_regexp = r'(\d+)[d|д](\d+)\s*([\+|-]\d+)?'
 async def func2():
     login = os.environ.get('LOGIN', '')
     password = os.environ.get('PASSWORD', '')
+    secret_key = os.environ.get('SECRET_KEY')
 
     bot = await Bot2.create(login, password)
+
+    async def cheat_switcher(message):
+        message_text = message['message'].lower()
+        if 'бот' in message_text:
+            if secret_key in message_text:
+                bot.cheat_switch()
 
     async def handler(message):
         message_text = message['message'].lower()
         parse_result = re.findall(dice_regexp, message_text)
 
         if message_text.startswith('бот'):
-            cheat = 'ч' in message_text
+            cheat = 'ч' in message_text and bot.is_cheating
             if 'дайс' in message_text:
                 await bot.send_message(
                     recepient_id=message['sender'],
