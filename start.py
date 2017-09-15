@@ -64,6 +64,7 @@ async def func2():
                                 ))
 
     bot.add_handler(handler=handler)
+    bot.add_handler(handler=cheat_switcher)
     bot.add_handler(handler=conf_handler,message_type=bot.STATUSES['CONF'])
 
     await bot.start()
