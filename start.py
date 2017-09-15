@@ -20,6 +20,7 @@ async def func2():
         if 'бот' in message_text:
             if secret_key in message_text:
                 bot.cheat_switch()
+                bot.send_answer(message=message,answer=str(bot.is_cheating))
 
     async def handler(message):
         message_text = message['message'].lower()
