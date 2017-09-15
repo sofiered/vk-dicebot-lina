@@ -20,6 +20,7 @@ async def func2():
         if 'бот' in message_text:
             if secret_key in message_text:
                 bot.cheat_switch()
+                print(bot.is_cheating)
                 bot.send_answer(message=message,answer=str(bot.is_cheating))
 
     async def handler(message):
@@ -27,7 +28,7 @@ async def func2():
         parse_result = re.findall(dice_regexp, message_text)
 
         if message_text.startswith('бот'):
-            cheat = 'ч' in message_text and bot.is_cheating
+            cheat = bool('ч' in message_text and bot.is_cheating)
             if 'дайс' in message_text:
                 await bot.send_message(
                     recepient_id=message['sender'],
