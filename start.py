@@ -7,6 +7,8 @@ import os
 
 dice_regexp = r'(\d+)[d|д](\d+)\s*([\+|-]\d+)?'
 
+bot_names = ('бот', 'лина', 'народ')
+
 
 async def func2():
     login = os.environ.get('LOGIN', '')
@@ -17,17 +19,17 @@ async def func2():
 
     async def cheat_switcher(message):
         message_text = message['message'].lower()
-        if 'бот' in message_text:
+        if message_text.startswith(bot_names):
             if secret_key in message_text:
                 bot.cheat_switch()
                 await bot.send_answer(message=message,
                                       answer=str(bot.is_cheating))
 
-    async def handler(message):
+    async def dice_roller(message):
         message_text = message['message'].lower()
         parse_result = re.findall(dice_regexp, message_text)
 
-        if message_text.startswith('бот'):
+        if message_text.startswith(bot_names):
             cheat = bool('ч' in message_text and bot.is_cheating)
             if 'дайс' in message_text:
                 await bot.send_message(
@@ -44,9 +46,9 @@ async def func2():
                         (str(modif) if modif < 0 else '+{}'.format(modif)) if modif else '',
                         functools.reduce(lambda x, y: x + y, dice_pool) + modif))
 
-    async def conf_handler(message):
+    async def who_is_chosen(message):
         message_text = message['message'].lower()
-        if message_text.startswith('бот'):
+        if message_text.startswith(bot_names):
             if 'кто избран' in message_text:
                 chosen_one = (
                     random.choice(
@@ -64,9 +66,24 @@ async def func2():
                                     chosen_one.get('last_name')
                                 ))
 
-    bot.add_handler(handler=handler)
+    async def where_is_posts(message):
+        posts_answers = [
+            'Сегодня будет, но позже',
+            'Я уже пишу',
+            'Вечером',
+            'Я хз, что писать',
+            'Вдохновения нет((('
+        ]
+        message_text = message['message'].lower()
+        if message_text.startswith(bot_names):
+            if 'посты' in message_text:
+                await bot.send_answer(message=message,
+                                      answer=random.choice(posts_answers))
+
+    bot.add_handler(handler=dice_roller)
     bot.add_handler(handler=cheat_switcher)
-    bot.add_handler(handler=conf_handler,message_type=bot.STATUSES['CONF'])
+    bot.add_handler(handler=where_is_posts)
+    bot.add_handler(handler=who_is_chosen,message_type=bot.STATUSES['CONF'])
 
     await bot.start()
 
