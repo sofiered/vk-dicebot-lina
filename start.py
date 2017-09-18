@@ -34,11 +34,14 @@ async def func2():
             if 'дайс' in message_text:
                 await bot.send_message(
                     recepient_id=message['sender'],
-                    message='D20: {}'.format(random.randint(1,20)) if not cheat else 20)
+                    message='D20: {}'.format(
+                        random.SystemRandom().randint(1,20))
+                    if not cheat else 20)
             elif parse_result:
                 amount, dice, modif = map(lambda x: int(x) if x else 0,
                                           parse_result[0])
-                dice_pool = [random.randint(1, dice) if not cheat else dice for i in range(amount)]
+                dice_pool = [random.SystemRandom().randint(1, dice)
+                             if not cheat else dice for i in range(amount)]
                 await bot.send_answer(
                     message,
                     '({}){} = {}'.format(
