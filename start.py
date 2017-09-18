@@ -94,6 +94,7 @@ async def func2():
     bot.add_handler(handler=dice_roller)
     bot.add_handler(handler=cheat_switcher)
     bot.add_handler(handler=where_is_posts)
+    bot.add_handler(handler=send_peachy)
     bot.add_handler(handler=who_is_chosen,message_type=bot.STATUSES['CONF'])
 
     await bot.start()
