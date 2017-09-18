@@ -110,6 +110,11 @@ class Bot2:
         await self.send_message(recepient_id=message['sender'],
                                 message=answer)
 
+    async def send_sticker(self, send_to, sticker_id):
+        await self._api.messages.sendSticker(peer_id=send_to,
+                                             random_id=randint(10000, 99999),
+                                             sticker_id=sticker_id)
+
     async def get_chat_users(self, peer_id):
         return await self._api.messages.getChatUsers(
             chat_id=self.get_chat_id_by_peer_id(peer_id),
