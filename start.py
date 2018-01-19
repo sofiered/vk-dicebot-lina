@@ -35,19 +35,21 @@ async def main():
                 await bot.send_message(
                     recepient_id=message['sender'],
                     message='D20: {}'.format(
-                        random.SystemRandom().randint(1,20))
+                        random.SystemRandom().randint(1, 20))
                     if not cheat else 20)
             elif parse_result:
                 amount, dice, modif = map(lambda x: int(x) if x else 0,
                                           parse_result[0])
                 dice_pool = [random.SystemRandom().randint(1, dice)
-                             if not cheat else dice for i in range(amount)]
+                             if not cheat else dice for _ in range(amount)]
                 await bot.send_answer(
                     message,
                     '({}){} = {}'.format(
                         ' + '.join(map(str, dice_pool)),
-                        (str(modif) if modif < 0 else '+{}'.format(modif)) if modif else '',
-                        functools.reduce(lambda x, y: x + y, dice_pool) + modif))
+                        (str(modif) if modif < 0 else '+{}'.format(modif))
+                        if modif else '',
+                        functools.reduce(lambda x, y: x + y,
+                                         dice_pool) + modif))
 
     async def who_is_chosen(message):
         message_text = message['message'].lower()
@@ -64,10 +66,10 @@ async def main():
                     )
                 )
                 await bot.send_answer(message=message,
-                                answer='{} {}, ты избран!'.format(
-                                    chosen_one.get('first_name'),
-                                    chosen_one.get('last_name')
-                                ))
+                                      answer='{} {}, ты избран!'.format(
+                                          chosen_one.get('first_name'),
+                                          chosen_one.get('last_name')
+                                      ))
 
     async def where_is_posts(message):
         posts_answers = [
@@ -98,7 +100,7 @@ async def main():
     bot.add_handler(handler=cheat_switcher)
     bot.add_handler(handler=where_is_posts)
     bot.add_handler(handler=send_peachy)
-    bot.add_handler(handler=who_is_chosen,message_type=bot.STATUSES['CONF'])
+    bot.add_handler(handler=who_is_chosen, message_type=bot.STATUSES['CONF'])
 
     await bot.start()
 

@@ -32,6 +32,7 @@ class Bot2:
 
     CONF_PEER_MODIFIER = 2000000000
 
+    _id = None
     _session = None
     _api = None
     _loop_started = None
