@@ -10,7 +10,7 @@ dice_regexp = r'(\d+)[d|д](\d+)\s*([\+|-]\d+)?'
 bot_names = ('бот', 'лина', 'народ')
 
 
-async def func2():
+async def main():
     login = os.environ.get('LOGIN', '')
     password = os.environ.get('PASSWORD', '')
     secret_key = os.environ.get('SECRET_KEY')
@@ -103,4 +103,4 @@ async def func2():
     await bot.start()
 
 loop = asyncio.get_event_loop()
-loop.run_until_complete(func2())
+loop.run_until_complete(main())
