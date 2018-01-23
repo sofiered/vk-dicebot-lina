@@ -10,6 +10,12 @@ dice_regexp = r'(\d+)[d|д](\d+)\s*([\+|-]\d+)?'
 
 bot_names = ('бот', 'лина', 'народ')
 
+peachy_ids = range(49,97)
+rumka_ids = range(5582, 5630)
+misti_ids = range(5701, 5745)
+
+cats_id = [cat for cat in chain(peachy_ids, rumka_ids, misti_ids)]
+
 
 async def main():
     login = os.environ.get('LOGIN', '')
@@ -86,12 +92,7 @@ async def main():
                 await bot.send_answer(message=message,
                                       answer=random.choice(posts_answers))
 
-    async def send_peachy(message):
-        peachy_ids = range(49,97)
-        rumka_ids = range(5582, 5630)
-        misti_ids = range(5701, 5745)
-
-        cats_id = chain(peachy_ids, rumka_ids, misti_ids)
+    async def send_cat(message):
         message_text = message['message'].lower()
         if message_text.startswith(bot_names):
             if 'мяу' in message_text:
@@ -101,7 +102,7 @@ async def main():
     bot.add_handler(handler=dice_roller)
     bot.add_handler(handler=cheat_switcher)
     bot.add_handler(handler=where_is_posts)
-    bot.add_handler(handler=send_peachy)
+    bot.add_handler(handler=send_cat)
     bot.add_handler(handler=who_is_chosen, message_type=bot.STATUSES['CONF'])
 
     await bot.start()
