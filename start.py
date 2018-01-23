@@ -4,6 +4,7 @@ import random
 import re
 import functools
 import os
+from itertools import chain
 
 dice_regexp = r'(\d+)[d|д](\d+)\s*([\+|-]\d+)?'
 
@@ -86,15 +87,16 @@ async def main():
                                       answer=random.choice(posts_answers))
 
     async def send_peachy(message):
-        peachy_ids = [66, 89, 63, 75, 71, 86, 50, 68, 58, 65, 59, 83, 70, 77,
-                      88, 87, 49, 54, 56, 67, 73, 51, 55, 57, 72, 61, 60, 64,
-                      81, 84, 79, 96, 74, 78, 52, 80, 62, 82, 53, 69, 94, 90,
-                      91, 85, 92, 93, 95, 76]
+        peachy_ids = range(49,97)
+        rumka_ids = range(5582, 5630)
+        misti_ids = range(5701, 5745)
+
+        cats_id = chain(peachy_ids, rumka_ids, misti_ids)
         message_text = message['message'].lower()
         if message_text.startswith(bot_names):
             if 'мяу' in message_text:
                 await bot.send_sticker(send_to=message['sender'],
-                                       sticker_id=random.choice(peachy_ids))
+                                       sticker_id=random.choice(cats_id))
 
     bot.add_handler(handler=dice_roller)
     bot.add_handler(handler=cheat_switcher)
