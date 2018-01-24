@@ -135,11 +135,48 @@ async def main():
             await bot.send_answer(message=message,
                                   answer=random.choice(advices))
 
+    @message_to_bot
+    async def who_is_guily(message, text):
+        guilty = [
+            'Да это все массонский заговор',
+            'Путин, кто же еще',
+            'Это происки сатаны',
+            'Рептилоиды, они же управляют всей планетой',
+            'Судьба...',
+            'Не знаю, но точно не я!',
+            'Это все я, прости',
+            'Глобальное потепление',
+            'Ты сам. А кто же еще?',
+            'Телевизор',
+            'Интернет',
+            'Тупые школьники'
+        ]
+        if 'кто виноват' in text:
+            if random.choice(range(10)) == 6 and message['sender'] > 2000000000:
+                chosen_one = (
+                    random.choice(
+                        list(
+                            filter(
+                                lambda x: x.get('id') != bot.get_account_id(),
+                                await bot.get_chat_users(message['sender'])
+                            )
+                        )
+                    )
+                )
+                await bot.send_answer(message=message,
+                                      answer='Это {} {} во всем виноват'.format(
+                                          chosen_one.get('first_name'),
+                                          chosen_one.get('last_name')))
+            else:
+                await bot.send_answer(message=message,
+                                  answer=random.choice(guilty))
+
     bot.add_handler(handler=dice_roller)
     bot.add_handler(handler=cheat_switcher)
     bot.add_handler(handler=where_is_posts)
     bot.add_handler(handler=send_cat)
     bot.add_handler(handler=get_advice)
+    bot.add_handler(handler=who_is_guily)
     bot.add_handler(handler=who_is_chosen, message_type=bot.STATUSES['CONF'])
 
     await bot.start()
