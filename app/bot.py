@@ -4,7 +4,11 @@ from aiovk import API, ImplicitSession
 from aiovk.longpoll import LongPoll
 import os
 
-app_id = int(os.environ.get('APP_ID', 0))
+if 'HEROKU_APP' in os.environ:
+    app_id = int(os.environ.get('APP_ID', 0))
+else:
+    import local_settings
+    app_id = local_settings.APP_ID
 
 
 class NotConferenceException(Exception):
@@ -127,6 +131,8 @@ class Bot2:
         _poll = LongPoll(self._api, mode=0)
         while self._loop_started:
             response = await _poll.wait()
+            if not 'HEROKU_APP' in os.environ:
+                print(response)
             for update in response.get('updates', []):
                 if update[0] == 4:
                     await self.handle_message(self._format_message(update))
