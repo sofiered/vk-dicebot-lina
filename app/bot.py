@@ -128,7 +128,7 @@ class Bot2:
 
     async def start(self):
         self._loop_started = True
-        _poll = LongPoll(self._api, mode=0)
+        _poll = LongPoll(self._api, mode=2)
         while self._loop_started:
             response = await _poll.wait()
             if not 'HEROKU_APP' in os.environ:
