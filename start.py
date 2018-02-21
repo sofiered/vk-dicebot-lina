@@ -13,8 +13,14 @@ bot_names = ('бот', 'лина', 'народ')
 peachy_ids = range(49,97)
 rumka_ids = range(5582, 5630)
 misti_ids = range(5701, 5745)
+seth_ids = range(6109,6156)
+lovely_ids = range(7096,7143)
 
-cats_id = [cat for cat in chain(peachy_ids, rumka_ids, misti_ids)]
+cats_id = [cat for cat in chain(peachy_ids,
+                                rumka_ids,
+                                misti_ids,
+                                seth_ids,
+                                lovely_ids)]
 
 
 def message_to_bot(func):
