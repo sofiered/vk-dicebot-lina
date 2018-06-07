@@ -36,13 +36,22 @@ async def main():
         login = os.environ.get('LOGIN', '')
         password = os.environ.get('PASSWORD', '')
         secret_key = os.environ.get('SECRET_KEY')
+        admin_key = int(os.environ.get('ADMIN_KEY'))
     else:
         import local_settings
         login = local_settings.LOGIN
         password = local_settings.PASSWORD
         secret_key = local_settings.SECRET_KEY
+        admin_key = local_settings.ADMIN_KEY
 
     bot = await Bot2.create(login, password)
+
+    def admin_only(func):
+        async def decorated_func(message):
+            if message['speaker'] == admin_key:
+                await func(message)
+
+        return decorated_func
 
     @message_to_bot
     async def cheat_switcher(message, text):
@@ -177,12 +186,19 @@ async def main():
                 await bot.send_answer(message=message,
                                   answer=random.choice(guilty))
 
+    @admin_only
+    @message_to_bot
+    async def sey_hello_to_master(message, text):
+        if 'привет' in text:
+            await bot.send_answer(message=message, answer='Привет, создатель')
+
     bot.add_handler(handler=dice_roller)
     bot.add_handler(handler=cheat_switcher)
     bot.add_handler(handler=where_is_posts)
     bot.add_handler(handler=send_cat)
     bot.add_handler(handler=get_advice)
     bot.add_handler(handler=who_is_guily)
+    bot.add_handler(handler=sey_hello_to_master)
     bot.add_handler(handler=who_is_chosen, message_type=bot.STATUSES['CONF'])
 
     await bot.start()

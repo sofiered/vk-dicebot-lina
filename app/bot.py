@@ -18,6 +18,7 @@ class NotConferenceException(Exception):
 class Bot2:
     STATUSES = {
         'UNREAD':       1,
+        'OUTBOX':       2,
         'REPLIED':      4,
         'IMPORTANT':    8,
         'CHAT':         16,
@@ -33,6 +34,8 @@ class Bot2:
     INCOMING = 0
     OUTCOMING = 1
     OUTBOX = 2
+
+
 
     CONF_PEER_MODIFIER = 2000000000
 
@@ -56,12 +59,13 @@ class Bot2:
         await bot.auth()
         return bot
 
-    @staticmethod
-    def _format_message(message):
+    def _format_message(self, message):
         return {
             'status': message[2],
             'sender': message[3],
-            'message': message[6]
+            'message': message[6],
+            'speaker': int(message[7]['from'])
+            if self.STATUSES['CONF'] & message[2] else message[3]
         }
 
     def get_chat_id_by_peer_id(self, peer_id):
@@ -131,10 +135,14 @@ class Bot2:
         _poll = LongPoll(self._api, mode=2)
         while self._loop_started:
             response = await _poll.wait()
-            if not 'HEROKU_APP' in os.environ:
-                print(response)
             for update in response.get('updates', []):
                 if update[0] == 4:
+                    if not 'HEROKU_APP' in os.environ:
+                        print(', '.join(
+                            [mnemonic for (mnemonic, bitmap)
+                             in self.STATUSES.items() if update[2] & bitmap]))
+
+                        print(response)
                     await self.handle_message(self._format_message(update))
 
     def stop(self):
