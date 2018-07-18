@@ -6,7 +6,7 @@ import functools
 import os
 from itertools import chain
 
-dice_regexp = r'(\d+)[d|д](\d+)\s*([\+|-]\d+)?'
+dice_regexp = r'(\d+)[d|д|к](\d+)\s*([\+|-]\d+)?'
 
 bot_names = ('бот', 'лина', 'народ')
 
