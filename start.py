@@ -204,6 +204,26 @@ async def main():
                 answer = 'инфа %s%%' % infa
             await bot.send_answer(message=message, answer=answer)
 
+    @message_to_bot
+    async def get_help(message, text):
+        need_help = ('команды', 'помощь')
+        answer = 'Отзываюсь на Лина, Бот и Народ в начале сообщения. Регистр не важен. \r\n' \
+                 'Кроме команды в сообщение можно добавлять любой текст. ' \
+                 'Можно использовать несколько команд в одном сообщении, ' \
+                 'они выполнятся в случайном порядке\r\n' \
+                 '--- броски кубиков ---\r\n' \
+                 'команды в формате 2д4, 1d12 или 3к6. Можно прибавлять и вычитать модификаторы, например, 1д12 +3\r\n' \
+                 'команда "дайс" это то же самое, что и 1d20 \r\n' \
+                 '--- другие команды ---\r\n' \
+                 '"кто избран" указывает на случайного человека в беседе. Не работает в личных сообщениях\r\n' \
+                 '"кто виноват" поможет найти причину всех бед' \
+                 '"посты" объясняет, почему никто ничего не пишет\r\n' \
+                 '"инфа" определит степень достоверности факта\r\n' \
+                 '"мяу" покажет случайный стикер с котиком'
+        if any(keyword in text for keyword in need_help):
+            await bot.send_answer(message=message,
+                                  answer=answer)
+
 
     bot.add_handler(handler=dice_roller)
     bot.add_handler(handler=cheat_switcher)
@@ -213,6 +233,7 @@ async def main():
     bot.add_handler(handler=who_is_guily)
     bot.add_handler(handler=sey_hello_to_master)
     bot.add_handler(handler=info)
+    bot.add_handler(handler=get_help)
     bot.add_handler(handler=who_is_chosen, message_type=bot.STATUSES['CONF'])
 
     await bot.start()
