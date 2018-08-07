@@ -190,7 +190,21 @@ async def main():
     @message_to_bot
     async def sey_hello_to_master(message, text):
         if 'привет' in text:
-            await bot.send_answer(message=message, answer='Привет, создатель')
+            await bot.send_answer(message=message, answer='Привет, создатель \r\nКак дела?')
+
+    @admin_only
+    @message_to_bot
+    async def info(message, text):
+        if 'инфа' in text:
+            infa = random.SystemRandom().randint(1,101)
+            if infa == 100:
+                answer = 'инфа сотка'
+            elif infa == 101:
+                answer = 'инфа 146%'
+            else:
+                answer = 'инфа %s%%' % infa
+            await bot.send_answer(message=message, answer=answer)
+
 
     bot.add_handler(handler=dice_roller)
     bot.add_handler(handler=cheat_switcher)
@@ -199,6 +213,7 @@ async def main():
     bot.add_handler(handler=get_advice)
     bot.add_handler(handler=who_is_guily)
     bot.add_handler(handler=sey_hello_to_master)
+    bot.add_handler(handler=info)
     bot.add_handler(handler=who_is_chosen, message_type=bot.STATUSES['CONF'])
 
     await bot.start()
