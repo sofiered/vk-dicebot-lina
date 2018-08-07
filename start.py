@@ -190,9 +190,8 @@ async def main():
     @message_to_bot
     async def sey_hello_to_master(message, text):
         if 'привет' in text:
-            await bot.send_answer(message=message, answer='Привет, создатель \r\nКак дела?')
+            await bot.send_answer(message=message, answer='Привет, создатель')
 
-    @admin_only
     @message_to_bot
     async def info(message, text):
         if 'инфа' in text:
