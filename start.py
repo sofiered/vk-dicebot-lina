@@ -77,7 +77,8 @@ async def main():
                 await bot.send_answer(message, 'Зачем бросать дайс менее одного раза?')
                 return
             if dice < 1:
-                await bot.send_answer(message, "Я не умею бросить {}-сторонний дайс".format(dice))
+                await bot.send_answer(message, "Я не умею бросить {}-сторонний дайс".format(dice)
+                return
             dice_pool = [random.SystemRandom().randint(1, dice)
                          if not cheat else dice for _ in range(amount)]
             await bot.send_answer(
