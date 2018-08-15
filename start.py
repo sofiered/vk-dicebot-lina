@@ -250,6 +250,7 @@ async def main():
     bot.add_handler(handler=sey_hello_to_master)
     bot.add_handler(handler=info)
     bot.add_handler(handler=get_help)
+    bot.add_handler(handler=love_you)
     bot.add_handler(handler=who_is_chosen, message_type=bot.STATUSES['CONF'])
 
     await bot.start()
