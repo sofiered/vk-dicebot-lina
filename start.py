@@ -72,6 +72,7 @@ async def main():
         elif parse_result:
             amount, dice, modifier = map(lambda x: int(x) if x else 0,
                                       parse_result[0])
+            print("{} {} {}".format(amount, dice, modifier))
             if amount < 1:
                 await bot.send_answer(message, 'Зачем бросать дайс менее одного раза?')
                 return
