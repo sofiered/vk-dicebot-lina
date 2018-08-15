@@ -212,6 +212,15 @@ async def main():
             await bot.send_answer(message=message, answer=answer)
 
     @message_to_bot
+    async def love_you(message, text):
+        love = ('люблю тебя', 'я тебя люблю')
+        if any(keyword in text for keyword in love):
+            if message['speaker'] == admin_key:
+                await bot.send_answer(message, "Я тоже тебя люблю <3")
+            else:
+                await bot.send_answer(message, "А я тебя нет")
+
+    @message_to_bot
     async def get_help(message, text):
         need_help = ('команды', 'помощь')
         answer = 'Отзываюсь на Лина, Бот и Народ в начале сообщения. Регистр не важен. \r\n' \
