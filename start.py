@@ -72,6 +72,11 @@ async def main():
         elif parse_result:
             amount, dice, modifier = map(lambda x: int(x) if x else 0,
                                       parse_result[0])
+            if amount < 1:
+                await bot.send_answer(message, 'Зачем бросать дайс менее одного раза?')
+                return
+            if dice < 1:
+                await bot.send_answer(message, "Я не умею бросить {}-сторонний дайс".format(dice))
             dice_pool = [random.SystemRandom().randint(1, dice)
                          if not cheat else dice for _ in range(amount)]
             await bot.send_answer(
@@ -216,7 +221,7 @@ async def main():
                  'команда "дайс" это то же самое, что и 1d20 \r\n' \
                  '-- другие команды --\r\n' \
                  '"кто избран" указывает на случайного человека в беседе. Не работает в личных сообщениях\r\n' \
-                 '"кто виноват" поможет найти причину всех бед' \
+                 '"кто виноват" поможет найти причину всех бед\r'n \
                  '"посты" объясняет, почему никто ничего не пишет\r\n' \
                  '"инфа" определит степень достоверности факта\r\n' \
                  '"мяу" покажет случайный стикер с котиком'
