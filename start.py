@@ -73,6 +73,9 @@ async def main():
             amount, dice, modifier = map(lambda x: int(x) if x else 0,
                                       parse_result[0])
             print("{} {} {}".format(amount, dice, modifier))
+            if amount > 1000 or dice > 1000:
+                await bot.send_answer(message, "Ты наркоман? Зачем тебе столько?")
+                return
             if amount < 1:
                 await bot.send_answer(message, 'Зачем бросать дайс менее одного раза?')
                 return
