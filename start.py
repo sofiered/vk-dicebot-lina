@@ -7,6 +7,7 @@ import os
 from itertools import chain
 
 dice_regexp = r'(\d+)[d|д|к](\d+)\s*([\+|-]\d+)?'
+interval_regexp = r'от\s*(\d+)\s*до\s*(\d+)?'
 
 bot_names = ('бот', 'лина', 'народ')
 
@@ -243,6 +244,17 @@ async def main():
             await bot.send_answer(message=message,
                                   answer=answer)
 
+    @message_to_bot
+    async def interval_random(message, text):
+        if 'рандом' in text:
+            parse_result = re.findall(interval_random, text)
+            if parse_result:
+                min, max = map(lambda x: int(x), parse_result[0])
+                value = random.SystemRandom().randint(min, max)
+                await bot.send_answer(message, "(от {} до {})={}".format(min,
+                                                                         max,
+                                                                         value))
+
 
     bot.add_handler(handler=dice_roller)
     bot.add_handler(handler=cheat_switcher)
@@ -254,6 +266,7 @@ async def main():
     bot.add_handler(handler=info)
     bot.add_handler(handler=get_help)
     bot.add_handler(handler=love_you)
+    bot.add_handler(handler=interval_random)
     bot.add_handler(handler=who_is_chosen, message_type=bot.STATUSES['CONF'])
 
     await bot.start()
