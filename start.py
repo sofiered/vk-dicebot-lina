@@ -250,6 +250,8 @@ async def main():
             parse_result = re.findall(interval_regexp, text)
             if parse_result:
                 min, max = map(lambda x: int(x), parse_result[0])
+                if min > max:
+                    min, max = max, min
                 value = random.SystemRandom().randint(min, max)
                 await bot.send_answer(message, "(от {} до {})={}".format(min,
                                                                          max,
