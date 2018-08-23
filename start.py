@@ -247,7 +247,7 @@ async def main():
     @message_to_bot
     async def interval_random(message, text):
         if 'рандом' in text:
-            parse_result = re.findall(interval_random, text)
+            parse_result = re.findall(interval_regexp, text)
             if parse_result:
                 min, max = map(lambda x: int(x), parse_result[0])
                 value = random.SystemRandom().randint(min, max)
