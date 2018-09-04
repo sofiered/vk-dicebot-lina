@@ -60,8 +60,8 @@ async def main():
     async def cheat_switcher(message, text):
         if secret_key in text:
             bot.cheat_switch()
-            await bot.send_message(message=message,
-                                   answer=str(bot.is_cheating))
+            await bot.send_message(answer_to=message,
+                                   text=str(bot.is_cheating))
 
     @message_to_bot
     async def dice_roller(message, text):
@@ -159,8 +159,8 @@ async def main():
             'Ничего советовать не буду, ты и так знаешь что делать'
         ]
         if any(keyword in text for keyword in want_advice):
-            await bot.send_message(message=message,
-                                   answer=random.choice(advices))
+            await bot.send_message(answer_to=message,
+                                   text=random.choice(advices))
 
     @message_to_bot
     async def who_is_guily(message, text):
@@ -190,19 +190,20 @@ async def main():
                         )
                     )
                 )
-                await bot.send_message(message=message,
-                                       answer='Это {} {} во всем виноват'.format(
+                await bot.send_message(answer_to=message,
+                                       text='Это {} {} во всем виноват'.format(
                                           chosen_one.get('first_name'),
                                           chosen_one.get('last_name')))
             else:
-                await bot.send_message(message=message,
-                                       answer=random.choice(guilty))
+                await bot.send_message(answer_to=message,
+                                       text=random.choice(guilty))
 
     @admin_only
     @message_to_bot
     async def sey_hello_to_master(message, text):
         if 'привет' in text:
-            await bot.send_message(message=message, answer='Привет, создатель')
+            await bot.send_message(answer_to=message,
+                                   text='Привет, создатель')
 
     @message_to_bot
     async def info(message, text):
@@ -214,7 +215,8 @@ async def main():
                 answer = 'инфа 146%'
             else:
                 answer = 'инфа %s%%' % infa
-            await bot.send_message(message=message, answer=answer)
+            await bot.send_message(answer_to=message,
+                                   text=answer)
 
     @message_to_bot
     async def love_you(message, text):
@@ -243,8 +245,8 @@ async def main():
                  '"инфа" определит степень достоверности факта\r\n' \
                  '"мяу" покажет случайный стикер с котиком'
         if any(keyword in text for keyword in need_help):
-            await bot.send_message(message=message,
-                                   answer=answer)
+            await bot.send_message(answer_to=message,
+                                   text=answer)
 
     @message_to_bot
     async def interval_random(message, text):
