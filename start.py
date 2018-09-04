@@ -6,6 +6,8 @@ import functools
 import os
 from itertools import chain
 
+loop = asyncio.get_event_loop()
+
 dice_regexp = r'(\d+)[d|д|к](\d+)\s*([\+|-]\d+)?'
 interval_regexp = r'от\s*(\d+)\s*до\s*(\d+)?'
 
@@ -45,7 +47,7 @@ async def main():
         secret_key = local_settings.SECRET_KEY
         admin_key = local_settings.ADMIN_KEY
 
-    bot = await Bot2.create(login, password)
+    bot = await Bot2.create(login, password, loop)
 
     def admin_only(func):
         async def decorated_func(message):
@@ -58,34 +60,33 @@ async def main():
     async def cheat_switcher(message, text):
         if secret_key in text:
             bot.cheat_switch()
-            await bot.send_answer(message=message,
-                                  answer=str(bot.is_cheating))
+            await bot.send_message(message=message,
+                                   answer=str(bot.is_cheating))
 
     @message_to_bot
     async def dice_roller(message, text):
         parse_result = re.findall(dice_regexp, text)
         cheat = bool('ч' in text and bot.is_cheating)
         if 'дайс' in text:
-            await bot.send_message(
-                recepient_id=message['sender'],
-                message='D20: {}'.format(
+            await bot.send_message(answer_to=message,
+                                   text='D20: {}'.format(
                     random.SystemRandom().randint(1, 20) if not cheat else 20))
         elif parse_result:
             amount, dice, modifier = map(lambda x: int(x) if x else 0,
                                       parse_result[0])
             print("{} {} {}".format(amount, dice, modifier))
             if amount > 1000 or dice > 1000:
-                await bot.send_answer(message, "Ты наркоман? Зачем тебе столько?")
+                await bot.send_message(message, "Ты наркоман? Зачем тебе столько?")
                 return
             if amount < 1:
-                await bot.send_answer(message, 'Зачем бросать дайс менее одного раза?')
+                await bot.send_message(message, 'Зачем бросать дайс менее одного раза?')
                 return
             if dice < 1:
-                await bot.send_answer(message, "Я не умею бросить {}-сторонний дайс".format(dice))
+                await bot.send_message(message, "Я не умею бросить {}-сторонний дайс".format(dice))
                 return
             dice_pool = [random.SystemRandom().randint(1, dice)
                          if not cheat else dice for _ in range(amount)]
-            await bot.send_answer(
+            await bot.send_message(
                 message,
                 '({}){} = {}'.format(
                     ' + '.join(map(str, dice_pool)),
@@ -107,8 +108,8 @@ async def main():
                     )
                 )
             )
-            await bot.send_answer(message=message,
-                                  answer='{} {}, ты избран!'.format(
+            await bot.send_message(answer_to=message,
+                                   text='{} {}, ты избран!'.format(
                                       chosen_one.get('first_name'),
                                       chosen_one.get('last_name')
                                   ))
@@ -123,13 +124,13 @@ async def main():
             'Вдохновения нет((('
         ]
         if 'посты' in text:
-            await bot.send_answer(message=message,
-                                  answer=random.choice(posts_answers))
+            await bot.send_message(answer_to=message,
+                                   text=random.choice(posts_answers))
 
     @message_to_bot
     async def send_cat(message, text):
         if 'мяу' in text:
-            await bot.send_sticker(send_to=message['sender'],
+            await bot.send_sticker(answer_to=message,
                                    sticker_id=random.choice(cats_id))
 
     @message_to_bot
@@ -158,8 +159,8 @@ async def main():
             'Ничего советовать не буду, ты и так знаешь что делать'
         ]
         if any(keyword in text for keyword in want_advice):
-            await bot.send_answer(message=message,
-                                  answer=random.choice(advices))
+            await bot.send_message(message=message,
+                                   answer=random.choice(advices))
 
     @message_to_bot
     async def who_is_guily(message, text):
@@ -189,19 +190,19 @@ async def main():
                         )
                     )
                 )
-                await bot.send_answer(message=message,
-                                      answer='Это {} {} во всем виноват'.format(
+                await bot.send_message(message=message,
+                                       answer='Это {} {} во всем виноват'.format(
                                           chosen_one.get('first_name'),
                                           chosen_one.get('last_name')))
             else:
-                await bot.send_answer(message=message,
-                                  answer=random.choice(guilty))
+                await bot.send_message(message=message,
+                                       answer=random.choice(guilty))
 
     @admin_only
     @message_to_bot
     async def sey_hello_to_master(message, text):
         if 'привет' in text:
-            await bot.send_answer(message=message, answer='Привет, создатель')
+            await bot.send_message(message=message, answer='Привет, создатель')
 
     @message_to_bot
     async def info(message, text):
@@ -213,16 +214,16 @@ async def main():
                 answer = 'инфа 146%'
             else:
                 answer = 'инфа %s%%' % infa
-            await bot.send_answer(message=message, answer=answer)
+            await bot.send_message(message=message, answer=answer)
 
     @message_to_bot
     async def love_you(message, text):
         love = ('люблю тебя', 'я тебя люблю')
         if any(keyword in text for keyword in love):
             if message['speaker'] == admin_key:
-                await bot.send_answer(message, "Я тоже тебя люблю <3")
+                await bot.send_message(message, "Я тоже тебя люблю <3")
             else:
-                await bot.send_answer(message, "А я тебя нет")
+                await bot.send_message(message, "А я тебя нет")
 
     @message_to_bot
     async def get_help(message, text):
@@ -242,8 +243,8 @@ async def main():
                  '"инфа" определит степень достоверности факта\r\n' \
                  '"мяу" покажет случайный стикер с котиком'
         if any(keyword in text for keyword in need_help):
-            await bot.send_answer(message=message,
-                                  answer=answer)
+            await bot.send_message(message=message,
+                                   answer=answer)
 
     @message_to_bot
     async def interval_random(message, text):
@@ -254,9 +255,9 @@ async def main():
                 if min > max:
                     min, max = max, min
                 value = random.SystemRandom().randint(min, max)
-                await bot.send_answer(message, "(от {} до {})={}".format(min,
-                                                                         max,
-                                                                         value))
+                await bot.send_message(message, "(от {} до {})={}".format(min,
+                                                                          max,
+                                                                          value))
 
 
     bot.add_handler(handler=dice_roller)
@@ -274,5 +275,5 @@ async def main():
 
     await bot.start()
 
-loop = asyncio.get_event_loop()
+
 loop.run_until_complete(main())

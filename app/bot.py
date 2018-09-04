@@ -1,4 +1,6 @@
-from collections import defaultdict
+import asyncio
+from collections import defaultdict, namedtuple
+from queue import Queue
 from random import randint
 from aiovk import API, ImplicitSession
 from aiovk.longpoll import LongPoll
@@ -13,6 +15,8 @@ else:
 
 class NotConferenceException(Exception):
     pass
+
+Message = namedtuple('Message', ['type', 'recepient_id', 'content'])
 
 
 class Bot2:
@@ -48,14 +52,16 @@ class Bot2:
         OUTCOMING: defaultdict(list)
     }
 
-    def __init__(self, login, password):
+    def __init__(self, login, password, loop):
+        self.loop = loop
         self.login = login
         self.password = password
         self.is_cheating = False
+        self.queue = Queue()
 
     @staticmethod
-    async def create(login, password):
-        bot = Bot2(login, password)
+    async def create(login, password, loop):
+        bot = Bot2(login, password, loop)
         await bot.auth()
         return bot
 
@@ -110,19 +116,21 @@ class Bot2:
                 for handler in _handlers[bitmask]:
                     await handler(message)
 
-    async def send_message(self, recepient_id, message=''):
-        await self._api.messages.send(peer_id=recepient_id,
-                                      random_id=randint(10000, 99999),
-                                      message=message)
+    async def process_message(self, message: Message):
+        if message.type == 'message':
+            await self._api.messages.send(peer_id=message.recepient_id,
+                                          random_id=randint(10000,99999),
+                                          message=message.content)
+        elif message.type == 'sticker':
+            await self._api.messages.sendSticker(peer_id=message.recepient_id,
+                                                 random_id=randint(10000,99999),
+                                                 sticker_id=message.content)
 
-    async def send_answer(self, message, answer):
-        await self.send_message(recepient_id=message['sender'],
-                                message=answer)
+    async def send_message(self, answer_to, text):
+        self.queue.put(Message('message', answer_to['sender'], text))
 
-    async def send_sticker(self, send_to, sticker_id):
-        await self._api.messages.sendSticker(peer_id=send_to,
-                                             random_id=randint(10000, 99999),
-                                             sticker_id=sticker_id)
+    async def send_sticker(self, answer_to, sticker_id):
+        self.queue.put(Message('sticker', answer_to['sender'], sticker_id))
 
     async def get_chat_users(self, peer_id):
         return await self._api.messages.getChatUsers(
@@ -130,8 +138,15 @@ class Bot2:
             fields='first_name, last_name'
         )
 
+    async def send_message_from_queue(self):
+        while self._loop_started:
+            if not self.queue.empty():
+                await self.process_message(self.queue.get())
+            await asyncio.sleep(1)
+
     async def start(self):
         self._loop_started = True
+        asyncio.ensure_future(self.send_message_from_queue(), loop=self.loop)
         _poll = LongPoll(self._api, mode=2)
         while self._loop_started:
             response = await _poll.wait()
