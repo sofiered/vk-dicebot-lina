@@ -1,7 +1,8 @@
 import asyncio
 
+from collections import defaultdict
 from random import randint
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Callable, Set
 
 from aiovk import ImplicitSession, API
 from aiovk.longpoll import UserLongPoll
@@ -13,13 +14,15 @@ from .message import Message, TextMessage, StickerMessage
 
 class VkBot:
     _default_names: Tuple[str] = ('bot',)
-    _handlers = {
+
+    _handler_types = {
         EventType.AddMessage: handlers.AddMessageHandler
     }
+
     def __init__(self, app_id: int,
                  login: str,
                  password: str,
-                 names: List[str]=None,
+                 names: Tuple[str]=None,
                  scope: str='messages') -> None:
         self._id: int = None
         self.app_id:int = app_id
@@ -32,6 +35,9 @@ class VkBot:
         self.long_poll: UserLongPoll = None
         self.messaging_task: asyncio.Task = None
         self.messages_queue: asyncio.Queue = asyncio.Queue()
+        self.handlers: Dict[EventType,
+                            Set[handlers.BaseHandler]] = defaultdict(set)
+        self.handlers_location = handlers
 
 
 
@@ -46,8 +52,17 @@ class VkBot:
                                       mode=2,
                                       version=3)
         self._id = await self.get_account_id()
+        self.create_handlers()
         self.messaging_task = asyncio.create_task(self.messenger())
         await self.listener()
+
+    def create_handlers(self):
+        for event_type, class_name in self._handler_types.items():
+            for cls in class_name.__subclasses__():
+                print('add handler', cls)
+                handler = cls(self)
+                self.handlers[event_type].add(handler)
+
 
     async def get_account_id(self) -> int:
         profile = await self.api.account.getProfileInfo()
@@ -79,16 +94,16 @@ class VkBot:
     async def handle_long_poll_event(self,
                                      event_type: EventType,
                                      event: T):
-        if event_type in self._handlers:
-            for handler_cls in self._handlers[event_type].__subclasses__():
-                await handler_cls.handle(bot=self,
-                                         event=event)
+        if event_type in self.handlers:
+            for handler in self.handlers[event_type]:
+                await handler.handle(event)
 
     async def listener(self):
         while True:
             response = await self.long_poll.wait()
             updates = response.get('updates', [])
             for update in updates:
+                print(update)
                 try:
                     event_type = EventType(update[0])
                 except ValueError:
@@ -101,8 +116,8 @@ class VkBot:
     async def messenger(self):
         print('start messeging')
         while True:
-            print('check queue')
-            print(self.messages_queue.qsize())
+            # print('check queue')
+            # print(self.messages_queue.qsize())
             if not self.messages_queue.empty():
                 message = await self.messages_queue.get()
                 await self.process_message(message)

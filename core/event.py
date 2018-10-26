@@ -24,19 +24,19 @@ class EventType(Enum):
     DropLeftMenuCounter = 80
     UpdateNotifySettings = 114
 
-class Flags(Enum):
-    UNREAD = 1
-    OUTBOX =  2
-    REPLIED = 4
-    IMPORTANT = 8
-    CHAT = 16
-    FRIENDS = 32
-    SPAM = 64
-    DELETED = 128
-    FIXED = 256
-    MEDIA = 512
-    CONF = 8192
-    HIDDEN = 65536
+class MessageFlags(Enum):
+    Unread = 1
+    Outbox =  2
+    Replied = 4
+    Important = 8
+    Chat = 16
+    Friends = 32
+    Spam = 64
+    Deleted = 128
+    Fixed = 256
+    Media = 512
+    Conference = 8192
+    Hidden= 65536
 
 
 class DefaultLongPollEvent:
@@ -48,8 +48,9 @@ T = TypeVar('T', bound=DefaultLongPollEvent)
 class NewMessageLongPollEvent(DefaultLongPollEvent):
     def __init__(self, *data) -> None:
         self.message_id: int = data[1]
-        self.flags:int = data[2]
-        self.outbox:int = self.flags & Flags.OUTBOX.value
+        self.flags_raw:int = data[2]
+        self.flags = {flag for flag in list(MessageFlags)
+                      if flag.value & self.flags_raw}
         self.peer_id:int = data[3]
         self.text: str = data[5].lower()
         self.sender = data[6].get('from', self.peer_id)

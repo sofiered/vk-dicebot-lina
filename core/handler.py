@@ -1,29 +1,52 @@
-from typing import TYPE_CHECKING
+from .event import MessageFlags
+from typing import TYPE_CHECKING, Set
 
 
 if TYPE_CHECKING:
     from .vkbot import VkBot
     from .event import T, NewMessageLongPollEvent
 
+
+class EmptyTriggerError(Exception): ...
+
+
 class BaseHandler:
-    @staticmethod
-    async def handle(bot:'VkBot', event:'T'):
+    def __init__(self, bot: 'VkBot'):
+        self.bot: VkBot = bot
+
+    async def handle(self, event:'T'):
         raise NotImplementedError
+
 
 class AddMessageHandler(BaseHandler):
-    @classmethod
-    async def handle(cls, bot: 'VkBot', event:'NewMessageLongPollEvent'):
+    required_flags:set = set()
+    forbidden_flags = {MessageFlags.Outbox}
+    trigger:set or str = ''
+
+    async def handle(self,
+                     event:'NewMessageLongPollEvent'):
         print(' message handler')
-        if event.text.startswith(bot.names):
-            await cls._handle(bot, event)
+        if self.trigger == '' or self.trigger == set():
+            raise EmptyTriggerError()
 
-    @classmethod
-    async def _handle(cls, bot:'VkBot', event:'NewMessageLongPollEvent'):
+        if type(self.trigger) == str:
+            self.trigger = {self.trigger}
+
+        if not (self.required_flags <= event.flags) \
+                or not (self.forbidden_flags & event.flags == set()):
+            print('bad flags')
+            return
+
+        if not event.text.startswith(self.bot.names):
+            print('without name')
+            return
+
+        if not any(trigger in event.text for trigger in self.trigger):
+            print('without trigger')
+            return
+
+        await self._handle(event)
+
+    async def _handle(self,
+                      event:'NewMessageLongPollEvent'):
         raise NotImplementedError
-
-def incoming(func):
-    async def decorated_func(cls, bot: 'VkBot', event:'NewMessageLongPollEvent'):
-        if not event.outbox:
-            await func(cls, bot, event)
-
-    return decorated_func

@@ -1,21 +1,30 @@
 import asyncio
+import os
+from app.lina import LinaBot
 
-import local_settings
-from core.vkbot import VkBot
-from core.handler import AddMessageHandler, incoming
-from core.event import NewMessageLongPollEvent
 
-class EchoHandler(AddMessageHandler):
-    @classmethod
-    @incoming
-    async def _handle(cls, bot: 'VkBot', event: 'NewMessageLongPollEvent'):
-        await bot.send_text_message(peer_id=event.peer_id,
-                                    text=event.text)
 
 async def main():
-    lina = VkBot(app_id=local_settings.APP_ID,
-                    login=local_settings.LOGIN,
-                    password=local_settings.PASSWORD)
+    if 'HEROKU_APP' in os.environ:
+        app_id = os.environ.get('APP_ID')
+        login = os.environ.get('LOGIN', '')
+        password = os.environ.get('PASSWORD', '')
+        secret_key = os.environ.get('SECRET_KEY')
+        admin_id = int(os.environ.get('ADMIN_KEY'))
+    else:
+        import local_settings
+        app_id = local_settings.APP_ID
+        login = local_settings.LOGIN
+        password = local_settings.PASSWORD
+        secret_key = local_settings.SECRET_KEY
+        admin_id = local_settings.ADMIN_KEY
+
+    lina = LinaBot(app_id=app_id,
+                   login=login,
+                   password=password,
+                   admin_id=admin_id,
+                   secret_key=secret_key,
+                   names=('lina',))
     await lina.start()
 
 
