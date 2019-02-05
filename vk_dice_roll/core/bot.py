@@ -1,4 +1,5 @@
 import asyncio
+from collections import defaultdict
 from random import randint
 from aiovk import ImplicitSession, API
 from aiovk.longpoll import UserLongPoll
@@ -6,11 +7,17 @@ from aiovk.longpoll import UserLongPoll
 from typing import Tuple, Optional
 
 from .message import TextMessage, StickerMessage, Message
-from .event import EventType, T, long_poll_event_factory
+from .handlers import InboxMessageHandler
+from .event import EventType, T, \
+    NewMessageLongPollEvent, MessageFlags, long_poll_event_factory
+
 
 class VkBot:
     _default_names = ('bot',)
     _default_scope = 'messages'
+    _handler_instances = defaultdict(set)
+
+    handler_classes = {EventType.NewMessage: InboxMessageHandler}
 
     def __init__(self, app_id: int, login: str, password: int,
                  names: Optional[Tuple[str]] = None,
@@ -38,9 +45,14 @@ class VkBot:
                                       mode=2,
                                       version=3)
         self._id = await self.get_account_id()
-        # self.create_handlers()
+        await self.create_handlers()
         self.messaging_task = asyncio.create_task(self.messenger())
         await self.listener()
+
+    async def create_handlers(self):
+        for event_type, handler_class in self.handler_classes.items():
+            for handler_subclass in handler_class.__subclasses__():
+                self._handler_instances[event_type].add(handler_subclass())
 
     async def get_account_id(self) -> int:
         profile = await self.api.account.getProfileInfo()
@@ -69,9 +81,26 @@ class VkBot:
                                          random_id=randint(10000, 99999),
                                          sticker_id=message.content)
 
-    async def handle_long_poll_event(self,
-                                     event_type: EventType,
-                                     event: T):
+    async def handle_long_poll_event(self, event_type: EventType, event: T):
+        if event_type == EventType.NewMessage:
+            await self.process_new_message(event)
+
+    async def process_new_message(self, event: NewMessageLongPollEvent):
+        if MessageFlags.Outbox in event.flags:
+            await self.process_outbox_message(event)
+        else:
+            print('inbox')
+            await self.process_inbox_message(event)
+
+    async def process_inbox_message(self, event: NewMessageLongPollEvent):
+        print(event.text, self.names)
+        if event.text.startswith(self.names):
+            for _handler in self._handler_instances.get(EventType.NewMessage):
+                message: Optional[Message] = await _handler.handle(event=event)
+                if message:
+                    await self.messages_queue.put(message)
+
+    async def process_outbox_message(self, event: NewMessageLongPollEvent):
         raise NotImplementedError
 
     async def listener(self):

@@ -5,7 +5,7 @@ class EventType(Enum):
     UpdateMessageFlags = 1
     SetMessageFlags = 2
     DropMessageFlags = 3
-    AddMessage = 4
+    NewMessage = 4
     EditMessage = 5
     ReadIncomingMessage = 6
     ReadOutcomingMessage = 7
@@ -49,7 +49,7 @@ class NewMessageLongPollEvent(DefaultLongPollEvent):
     def __init__(self, *data) -> None:
         self.message_id: int = data[1]
         self.flags_raw:int = data[2]
-        self.flags = {flag for flag in list(MessageFlags)
+        self.flags = {flag for flag in MessageFlags
                       if flag.value & self.flags_raw}
         self.peer_id:int = data[3]
         self.text: str = data[5].lower()
@@ -57,7 +57,7 @@ class NewMessageLongPollEvent(DefaultLongPollEvent):
 
 
 def long_poll_event_factory(*data) -> T:
-    if data[0] == EventType.AddMessage.value:
+    if data[0] == EventType.NewMessage.value:
         return NewMessageLongPollEvent(*data)
     else:
         return DefaultLongPollEvent()

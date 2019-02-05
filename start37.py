@@ -1,6 +1,6 @@
 import asyncio
 import os
-from lina import Lina
+from vk_dice_roll.lina import Lina
 
 
 
@@ -24,7 +24,7 @@ async def main():
                    password=password,
                    admin_id=admin_id,
                    secret_key=secret_key,
-                   names=('lina',))
+                   names=('моли','молли'))
     await lina.start()
 
 
