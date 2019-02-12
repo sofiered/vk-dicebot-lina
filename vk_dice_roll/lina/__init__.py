@@ -5,6 +5,7 @@ from .handlers import LinaInboxMessageHandler
 
 class Lina(VkBot):
     handler_classes = {EventType.NewMessage: LinaInboxMessageHandler}
+
     def __init__(self, admin_id: str, secret_key: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.admin_id = admin_id

@@ -4,22 +4,22 @@ from random import randint
 from aiovk import ImplicitSession, API
 from aiovk.longpoll import UserLongPoll
 
-from typing import Tuple, Optional
+from typing import Tuple, Optional, DefaultDict, Union
 
-from .message import TextMessage, StickerMessage, Message
+from .message import TextMessage, StickerMessage
 from .handlers import InboxMessageHandler
-from .event import EventType, T, \
-    NewMessageLongPollEvent, MessageFlags, long_poll_event_factory
+from .event import DefaultLongPollEvent, EventType, NewMessageLongPollEvent, \
+    MessageFlags, long_poll_event_factory
 
 
 class VkBot:
     _default_names = ('bot',)
     _default_scope = 'messages'
-    _handler_instances = defaultdict(set)
+    _handler_instances: DefaultDict[EventType, set] = defaultdict(set)
 
     handler_classes = {EventType.NewMessage: InboxMessageHandler}
 
-    def __init__(self, app_id: int, login: str, password: int,
+    def __init__(self, app_id: int, login: str, password: str,
                  names: Optional[Tuple[str]] = None,
                  scope: Optional[str] = None):
         self._id: Optional[int] = None
@@ -31,7 +31,7 @@ class VkBot:
         self.session: ImplicitSession = None
         self.api: API = None
         self.long_poll: UserLongPoll = None
-        self.messaging_task: asyncio.Task = None
+        self.messaging_task: Optional[asyncio.Task] = None
         self.messages_queue: asyncio.Queue = asyncio.Queue()
 
     async def start(self) -> None:
@@ -68,22 +68,29 @@ class VkBot:
 
     async def send_sticker(self, peer_id: int, sticker_id: int):
         message = StickerMessage(recipient_id=peer_id,
-                                 content=sticker_id)
+                                 sticker_id=sticker_id)
         await self.messages_queue.put(message)
 
-    async def process_message(self, message: Message):
-        if type(message) == TextMessage:
+    async def process_message(self, message: Union[TextMessage,
+                                                   StickerMessage]):
+        if isinstance(message, TextMessage):
             await self.api.messages.send(peer_id=message.recipient_id,
                                          random_id=randint(10000, 99999),
                                          message=message.content)
-        elif type(message) == StickerMessage:
+        elif isinstance(message, StickerMessage):
             await self.api.messages.send(peer_id=message.recipient_id,
                                          random_id=randint(10000, 99999),
-                                         sticker_id=message.content)
+                                         sticker_id=message.sticker_id)
+        else:
+            raise ValueError('unexpected type')
 
-    async def handle_long_poll_event(self, event_type: EventType, event: T):
-        if event_type == EventType.NewMessage:
+    async def handle_long_poll_event(self,
+                                     event: Union[DefaultLongPollEvent,
+                                                  NewMessageLongPollEvent]):
+        if isinstance(event, NewMessageLongPollEvent):
             await self.process_new_message(event)
+        else:
+            pass
 
     async def process_new_message(self, event: NewMessageLongPollEvent):
         if MessageFlags.Outbox in event.flags:
@@ -95,8 +102,9 @@ class VkBot:
     async def process_inbox_message(self, event: NewMessageLongPollEvent):
         print(event.text, self.names)
         if event.text.startswith(self.names):
-            for _handler in self._handler_instances.get(EventType.NewMessage):
-                message: Optional[Message] = await _handler.handle(event=event)
+            for _handler in self._handler_instances.get(EventType.NewMessage,
+                                                        set()):
+                message = await _handler.handle(event=event)
                 if message:
                     await self.messages_queue.put(message)
 
@@ -108,13 +116,8 @@ class VkBot:
             response = await self.long_poll.wait()
             updates = response.get('updates', [])
             for update in updates:
-                try:
-                    event_type = EventType(update[0])
-                except ValueError:
-                    return
                 event = long_poll_event_factory(*update)
-                await self.handle_long_poll_event(event_type,
-                                                  event)
+                await self.handle_long_poll_event(event)
 
     async def messenger(self):
         print('start messaging')

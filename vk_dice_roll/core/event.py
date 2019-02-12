@@ -1,5 +1,6 @@
 from enum import Enum
-from typing import Type, TypeVar, List, Tuple, Any
+from typing import Union
+
 
 class EventType(Enum):
     UpdateMessageFlags = 1
@@ -24,9 +25,10 @@ class EventType(Enum):
     DropLeftMenuCounter = 80
     UpdateNotifySettings = 114
 
+
 class MessageFlags(Enum):
     Unread = 1
-    Outbox =  2
+    Outbox = 2
     Replied = 4
     Important = 8
     Chat = 16
@@ -36,27 +38,26 @@ class MessageFlags(Enum):
     Fixed = 256
     Media = 512
     Conference = 8192
-    Hidden= 65536
+    Hidden = 65536
 
 
 class DefaultLongPollEvent:
     pass
 
-T = TypeVar('T', bound=DefaultLongPollEvent)
-
 
 class NewMessageLongPollEvent(DefaultLongPollEvent):
     def __init__(self, *data) -> None:
         self.message_id: int = data[1]
-        self.flags_raw:int = data[2]
+        self.flags_raw: int = data[2]
         self.flags = {flag for flag in MessageFlags
                       if flag.value & self.flags_raw}
-        self.peer_id:int = data[3]
+        self.peer_id: int = data[3]
         self.text: str = data[5].lower()
         self.sender = data[6].get('from', self.peer_id)
 
 
-def long_poll_event_factory(*data) -> T:
+def long_poll_event_factory(*data) -> Union[DefaultLongPollEvent,
+                                            NewMessageLongPollEvent]:
     if data[0] == EventType.NewMessage.value:
         return NewMessageLongPollEvent(*data)
     else:
