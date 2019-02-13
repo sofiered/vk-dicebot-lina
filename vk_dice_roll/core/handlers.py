@@ -1,7 +1,7 @@
-from typing import Optional, Union
+from typing import Optional, Type
 
 from .event import NewMessageLongPollEvent
-from .message import TextMessage, StickerMessage
+from .message import Message
 
 
 class InboxMessageHandler:
@@ -10,15 +10,18 @@ class InboxMessageHandler:
 
     async def handle(
             self,
-            event: NewMessageLongPollEvent) -> Optional[Union[TextMessage,
-                                                              StickerMessage]]:
+            event: NewMessageLongPollEvent) -> Optional[Message]:
         if self.trigger(event):
-            return await self._handle(event)
+            type_class = await self.get_type_class()
+            return await self._handle(type_class, event)
         else:
             return None
 
+    async def get_type_class(self) -> Type[Message]:
+        raise NotImplementedError
+
     async def _handle(
             self,
-            event: NewMessageLongPollEvent) -> Optional[Union[TextMessage,
-                                                              StickerMessage]]:
+            type_class: Type[Message],
+            event: NewMessageLongPollEvent) -> Message:
         raise NotImplementedError

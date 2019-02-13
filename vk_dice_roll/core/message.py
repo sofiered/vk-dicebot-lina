@@ -1,8 +1,10 @@
+from abc import ABC
 from dataclasses import dataclass
+from typing import TypeVar
 
 
 @dataclass()
-class BaseMessage:
+class BaseMessage(ABC):
     recipient_id: int
 
 
@@ -14,3 +16,6 @@ class TextMessage(BaseMessage):
 @dataclass()
 class StickerMessage(BaseMessage):
     sticker_id: int
+
+
+Message = TypeVar('Message', bound=BaseMessage)

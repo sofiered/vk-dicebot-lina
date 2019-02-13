@@ -1,17 +1,16 @@
 import random
 
 from itertools import chain
-from typing import Optional, Union, Type
+from typing import Optional, Type, Any, List
 
 from vk_dice_roll.core.event import NewMessageLongPollEvent
 from vk_dice_roll.core.handlers import InboxMessageHandler
-from vk_dice_roll.core.message import TextMessage, StickerMessage
+from vk_dice_roll.core.message import TextMessage, StickerMessage, Message
 
 
 class LinaInboxMessageHandler(InboxMessageHandler):
     trigger_word: Optional[str] = None
-    message_type: Type[Union[TextMessage,
-                             StickerMessage]] = TextMessage
+    message_type = Type[Message]
 
     def trigger(self, _event: NewMessageLongPollEvent) -> bool:
         print('check trigger', self.trigger_word)
@@ -20,36 +19,34 @@ class LinaInboxMessageHandler(InboxMessageHandler):
         print(result)
         return result
 
+    async def get_type_class(self):
+        return self.message_type
+
     async def _handle(
             self,
-            event: NewMessageLongPollEvent) -> Optional[Union[TextMessage,
-                                                              StickerMessage]]:
+            type_class: Type[Message],
+            event: NewMessageLongPollEvent) -> Message:
         content = await self.get_content(event)
-        if content is None:
-            return None
-        if self.message_type == TextMessage:
-            return TextMessage(recipient_id=event.peer_id,
-                               content=str(content))
-        elif self.message_type == StickerMessage:
-            return StickerMessage(recipient_id=event.peer_id,
-                                  sticker_id=int(content))
-        else:
-            return None
+        if content is not None:
+            params = [event.peer_id] + content
+
+        return type_class(*params)
 
     async def get_content(
             self,
-            event: NewMessageLongPollEvent) -> Optional[Union[str, int]]:
+            event: NewMessageLongPollEvent) -> Optional[List[Any]]:
         raise NotImplementedError
 
 
 class LinaDiceMessageHandler(LinaInboxMessageHandler):
     trigger_word = 'дайс'
+    message_type = TextMessage
 
     async def get_content(
             self,
-            event: NewMessageLongPollEvent) -> Optional[Union[str, int]]:
+            event: NewMessageLongPollEvent) -> List[Any]:
         result = 'дайс D20: {}'.format(random.SystemRandom().randint(1, 20))
-        return result
+        return [result]
 
 
 class LinaMeowMessageHandler(LinaInboxMessageHandler):
@@ -57,7 +54,7 @@ class LinaMeowMessageHandler(LinaInboxMessageHandler):
     message_type = StickerMessage
 
     async def get_content(self,
-                          event: NewMessageLongPollEvent) -> Optional[int]:
+                          event: NewMessageLongPollEvent) -> List[Any]:
         peachy_ids = range(49, 97)
         rumka_ids = range(5582, 5630)
         misti_ids = range(5701, 5745)
@@ -69,4 +66,4 @@ class LinaMeowMessageHandler(LinaInboxMessageHandler):
                                         misti_ids,
                                         seth_ids,
                                         lovely_ids)]
-        return random.choice(cats_id)
+        return [random.choice(cats_id)]
