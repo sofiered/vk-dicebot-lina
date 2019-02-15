@@ -52,7 +52,8 @@ class VkBot:
     async def create_handlers(self):
         for event_type, handler_class in self.handler_classes.items():
             for handler_subclass in handler_class.__subclasses__():
-                self._handler_instances[event_type].add(handler_subclass())
+                self._handler_instances[event_type].add(
+                    handler_subclass(self))
 
     async def get_account_id(self) -> int:
         profile = await self.api.account.getProfileInfo()

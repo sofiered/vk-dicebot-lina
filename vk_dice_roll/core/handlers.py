@@ -1,10 +1,13 @@
-from typing import Optional, Type
+from typing import Optional, Type, Any
 
 from .event import NewMessageLongPollEvent
 from .message import Message
 
 
 class InboxMessageHandler:
+    def __init__(self, bot):
+        self.bot = bot
+
     def trigger(self, _event: NewMessageLongPollEvent) -> bool:
         raise NotImplementedError
 
@@ -13,7 +16,8 @@ class InboxMessageHandler:
             event: NewMessageLongPollEvent) -> Optional[Message]:
         if self.trigger(event):
             type_class = await self.get_type_class()
-            return await self._handle(type_class, event)
+            return await self._handle(type_class,
+                                      event)
         else:
             return None
 

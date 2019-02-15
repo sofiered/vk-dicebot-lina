@@ -1,5 +1,5 @@
 from vk_dice_roll.core.bot import VkBot
-from vk_dice_roll.core.event import NewMessageLongPollEvent, EventType
+from vk_dice_roll.core.event import EventType, NewMessageLongPollEvent
 from .handlers import LinaInboxMessageHandler
 
 
@@ -10,6 +10,7 @@ class Lina(VkBot):
         super().__init__(*args, **kwargs)
         self.admin_id = admin_id
         self.secret_key = secret_key
+        self.is_cheating: bool = False
 
     async def process_outbox_message(self, event: NewMessageLongPollEvent):
         pass

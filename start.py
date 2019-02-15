@@ -262,17 +262,17 @@ async def main():
                                                                           value))
 
 
-    bot.add_handler(handler=dice_roller)
-    bot.add_handler(handler=cheat_switcher)
-    bot.add_handler(handler=where_is_posts)
-    bot.add_handler(handler=send_cat)
-    bot.add_handler(handler=get_advice)
+    bot.add_handler(handler=dice_roller) # checked
+    bot.add_handler(handler=cheat_switcher) # checked
+    bot.add_handler(handler=where_is_posts) # checked
+    bot.add_handler(handler=send_cat) # checked
+    bot.add_handler(handler=get_advice) # checked
     bot.add_handler(handler=who_is_guily)
-    bot.add_handler(handler=sey_hello_to_master)
-    bot.add_handler(handler=info)
+    bot.add_handler(handler=sey_hello_to_master) # checked
+    bot.add_handler(handler=info) # checked
     bot.add_handler(handler=get_help)
-    bot.add_handler(handler=love_you)
-    bot.add_handler(handler=interval_random)
+    bot.add_handler(handler=love_you) # checked
+    bot.add_handler(handler=interval_random) # checked
     bot.add_handler(handler=who_is_chosen, message_type=bot.STATUSES['CONF'])
 
     await bot.start()
