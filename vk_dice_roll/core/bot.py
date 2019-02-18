@@ -4,15 +4,22 @@ from random import randint
 from aiovk import ImplicitSession, API
 from aiovk.longpoll import UserLongPoll
 
-from typing import Tuple, Optional, DefaultDict, Union
+from typing import Tuple, Optional, DefaultDict, Union, List
 
 from .message import TextMessage, StickerMessage
 from .handlers import InboxMessageHandler
 from .event import DefaultLongPollEvent, EventType, NewMessageLongPollEvent, \
     MessageFlags, long_poll_event_factory
+from .user import User
+
+
+class NotConferenceException(Exception):
+    pass
 
 
 class VkBot:
+    CONF_PEER_MODIFIER = 2000000000
+
     _default_names = ('bot',)
     _default_scope = 'messages'
     _handler_instances: DefaultDict[EventType, set] = defaultdict(set)
@@ -84,6 +91,14 @@ class VkBot:
                                          sticker_id=message.sticker_id)
         else:
             raise ValueError('unexpected type')
+
+    async def get_chat_users(self, peer_id) -> List[User]:
+        users_list = await self.api.messages.getConversationMembers(
+            peer_id=peer_id,
+            fields='first_name, last_name'
+        )
+        return [User(**user) for user in users_list.get('profiles')
+                if user['id'] != self._id]
 
     async def handle_long_poll_event(self,
                                      event: Union[DefaultLongPollEvent,

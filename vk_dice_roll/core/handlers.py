@@ -1,4 +1,4 @@
-from typing import Optional, Type, Any
+from typing import Optional, Type
 
 from .event import NewMessageLongPollEvent
 from .message import Message

@@ -273,7 +273,7 @@ async def main():
     bot.add_handler(handler=get_help)
     bot.add_handler(handler=love_you) # checked
     bot.add_handler(handler=interval_random) # checked
-    bot.add_handler(handler=who_is_chosen, message_type=bot.STATUSES['CONF'])
+    bot.add_handler(handler=who_is_chosen, message_type=bot.STATUSES['CONF']) # checked
 
     await bot.start()
 

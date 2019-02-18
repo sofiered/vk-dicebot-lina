@@ -1,23 +1,28 @@
 import functools
 import random
 import re
-
 from itertools import chain
-from typing import Any, List, Type, Optional
+from typing import Any, List, Type, Optional, Union, Tuple
 
-from vk_dice_roll.core.event import NewMessageLongPollEvent
+from vk_dice_roll.core.event import NewMessageLongPollEvent, MessageFlags
 from vk_dice_roll.core.handlers import InboxMessageHandler
 from vk_dice_roll.core.message import TextMessage, StickerMessage, Message
 
 
 class LinaInboxMessageHandler(InboxMessageHandler):
-    trigger_word: Optional[str] = None
-    message_type = Type[Message]
+    trigger_word: Optional[Union[Tuple, str]] = None
+    message_type: Type = Type[Message]
+    required_flags: Optional[set] = None
 
-    def trigger(self, _event: NewMessageLongPollEvent) -> bool:
-        result = (self.trigger_word is not None
-                  and self.trigger_word.lower() in _event.text)
-        return result
+    def trigger(self, event: NewMessageLongPollEvent) -> bool:
+        return self._check_flags(event.flags) \
+               and self._check_trigger(event.text)
+
+    def _check_trigger(self, text: str) -> bool:
+        return self.trigger_word is not None and self.trigger_word in text
+
+    def _check_flags(self, flags: set):
+        return self.required_flags is None or self.required_flags <= flags
 
     async def get_type_class(self):
         return self.message_type
@@ -31,9 +36,7 @@ class LinaInboxMessageHandler(InboxMessageHandler):
         print(type_class, params)
         return type_class(*params)
 
-    async def get_content(
-            self,
-            event: NewMessageLongPollEvent) -> List[Any]:
+    async def get_content(self, event: NewMessageLongPollEvent) -> List[Any]:
         raise NotImplementedError
 
 
@@ -44,9 +47,9 @@ class Dice20MessageHandler(LinaInboxMessageHandler):
     async def get_content(
             self,
             event: NewMessageLongPollEvent) -> List[Any]:
-        result = 'дайс D20: %s' % (20 if self.bot.is_cheating
-                                         and 'ч' in event.text
-                                   else random.SystemRandom().randint(1, 20))
+        result = 'дайс D20: %s' % (
+            20 if self.bot.is_cheating and 'ч' in event.text
+            else random.SystemRandom().randint(1, 20))
         return [result]
 
 
@@ -178,7 +181,13 @@ class SayHelloMessageHandler(LinaInboxMessageHandler):
 
     async def get_content(self,
                           event: NewMessageLongPollEvent) -> List[Any]:
-        return ['Привет, мастер!']
+        hellos = ['Привет',
+                  'Здравствуйте',
+                  'Хай!',
+                  'Йоу!'
+                  ]
+        return ['Привет, мастер!' if event.sender == self.bot.admin_id
+                else random.choice(hellos)]
 
 
 class LoveYouMessageHandler(LinaInboxMessageHandler):
@@ -226,3 +235,40 @@ class IntervalRandomMessageHandler(LinaInboxMessageHandler):
             _min, _max = _max, _min
         result = random.SystemRandom().randint(_min, _max)
         return ['от %s до %s результат: %s ' % (_min, _max, result)]
+
+
+class WhoIsChosenMessageHandler(LinaInboxMessageHandler):
+    trigger_word = 'кто избран'
+    message_type = TextMessage
+    required_flags = {MessageFlags.Conference}
+
+    async def get_content(self, event: NewMessageLongPollEvent):
+        users = await self.bot.get_chat_users(event.peer_id)
+        return ['%s, ты избран!' % random.choice(users)]
+
+
+class WhoIsGuiltyMessageHandler(LinaInboxMessageHandler):
+    trigger_word = 'кто виноват'
+    message_type = TextMessage
+    guilty = [
+        'Да это все массонский заговор',
+        'Путин, кто же еще',
+        'Это происки сатаны',
+        'Рептилоиды, они же управляют всей планетой',
+        'Судьба...',
+        'Не знаю, но точно не я!',
+        'Это все я, прости',
+        'Глобальное потепление',
+        'Ты сам. А кто же еще?',
+        'Телевизор',
+        'Интернет',
+        'Тупые школьники'
+    ]
+
+    async def get_content(self, event: NewMessageLongPollEvent):
+        if (random.randint(1, 10) == 6
+                and MessageFlags.Conference in event.flags):
+            users = await self.bot.get_chat_users(event.peer_id)
+            return ['Это %s во всем виноват!' % random.choice(users)]
+        else:
+            return [random.choice(self.guilty)]

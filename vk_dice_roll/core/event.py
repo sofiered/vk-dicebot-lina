@@ -47,13 +47,14 @@ class DefaultLongPollEvent:
 
 class NewMessageLongPollEvent(DefaultLongPollEvent):
     def __init__(self, *data) -> None:
+        print(data)
         self.message_id: int = data[1]
         self.flags_raw: int = data[2]
-        self.flags = {flag for flag in MessageFlags
-                      if flag.value & self.flags_raw}
+        self.flags: set = {flag for flag in MessageFlags
+                           if flag.value & self.flags_raw}
         self.peer_id: int = data[3]
         self.text: str = data[5].lower()
-        self.sender = data[6].get('from', self.peer_id)
+        self.sender: int = int(data[6].get('from', self.peer_id))
 
 
 def long_poll_event_factory(*data) -> Union[DefaultLongPollEvent,
