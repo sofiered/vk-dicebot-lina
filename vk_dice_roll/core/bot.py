@@ -1,4 +1,6 @@
 import asyncio
+import logging
+
 from collections import defaultdict
 from random import randint
 from aiovk import ImplicitSession, API
@@ -26,9 +28,13 @@ class VkBot:
 
     handler_classes = {EventType.NewMessage: InboxMessageHandler}
 
-    def __init__(self, app_id: int, login: str, password: str,
+    def __init__(self,
+                 app_id: int,
+                 login: str,
+                 password: str,
                  names: Optional[Tuple[str]] = None,
-                 scope: Optional[str] = None):
+                 scope: Optional[str] = None,
+                 logger: Optional[logging.Logger] = None):
         self._id: Optional[int] = None
         self.app_id = app_id
         self.login: str = login
@@ -39,7 +45,9 @@ class VkBot:
         self.api: API = None
         self.long_poll: UserLongPoll = None
         self.messaging_task: Optional[asyncio.Task] = None
+        self.watcher_task: Optional[asyncio.Task] = None
         self.messages_queue: asyncio.Queue = asyncio.Queue()
+        self.log = logger or self.create_logger()
 
     async def start(self) -> None:
         self.session = ImplicitSession(login=self.login,
@@ -54,6 +62,7 @@ class VkBot:
         self._id = await self.get_account_id()
         await self.create_handlers()
         self.messaging_task = asyncio.create_task(self.messenger())
+        self.watcher_task = asyncio.create_task(self.watcher())
         await self.listener()
 
     async def create_handlers(self):
@@ -61,6 +70,13 @@ class VkBot:
             for handler_subclass in handler_class.__subclasses__():
                 self._handler_instances[event_type].add(
                     handler_subclass(self))
+
+    @staticmethod
+    def create_logger() -> logging.Logger:
+        logger = logging.getLogger('bot')
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(logging.StreamHandler())
+        return logger
 
     async def get_account_id(self) -> int:
         profile = await self.api.account.getProfileInfo()
@@ -81,6 +97,7 @@ class VkBot:
 
     async def process_message(self, message: Union[TextMessage,
                                                    StickerMessage]):
+        self.log.info('process message: %s' % message)
         if isinstance(message, TextMessage):
             await self.api.messages.send(peer_id=message.recipient_id,
                                          random_id=randint(10000, 99999),
@@ -92,7 +109,7 @@ class VkBot:
         else:
             raise ValueError('unexpected type')
 
-    async def get_chat_users(self, peer_id) -> List[User]:
+    async def get_chat_users(self, peer_id: int) -> List[User]:
         users_list = await self.api.messages.getConversationMembers(
             peer_id=peer_id,
             fields='first_name, last_name'
@@ -112,11 +129,9 @@ class VkBot:
         if MessageFlags.Outbox in event.flags:
             await self.process_outbox_message(event)
         else:
-            print('inbox')
             await self.process_inbox_message(event)
 
     async def process_inbox_message(self, event: NewMessageLongPollEvent):
-        print(event.text, self.names)
         if event.text.startswith(self.names):
             for _handler in self._handler_instances.get(EventType.NewMessage,
                                                         set()):
@@ -136,11 +151,17 @@ class VkBot:
                 await self.handle_long_poll_event(event)
 
     async def messenger(self):
-        print('start messaging')
+        self.log.info('start messaging')
         while True:
-            print('check queue')
-            print(self.messages_queue.qsize())
             if not self.messages_queue.empty():
+                self.log.info('current queue size: %s' %
+                              self.messages_queue.qsize())
                 message = await self.messages_queue.get()
                 await self.process_message(message)
             await asyncio.sleep(1)
+
+    async def watcher(self):
+        while True:
+            self.log.info('current queue size: %s'
+                          % self.messages_queue.qsize())
+            await asyncio.sleep(30)

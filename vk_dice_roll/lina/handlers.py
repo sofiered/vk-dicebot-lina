@@ -31,10 +31,13 @@ class LinaInboxMessageHandler(InboxMessageHandler):
             self,
             type_class: Type[Message],
             event: NewMessageLongPollEvent) -> Message:
+        self.bot.log.info('handling event: %s' % event)
         content = await self.get_content(event)
-        params = [event.peer_id] + (content or [])
-        print(type_class, params)
-        return type_class(*params)
+        args = [event.peer_id] + (content or [])
+        self.bot.log.info('making message %s with args %s' % (type_class,
+                                                              args))
+
+        return type_class(*args)
 
     async def get_content(self, event: NewMessageLongPollEvent) -> List[Any]:
         raise NotImplementedError
@@ -75,16 +78,14 @@ class MeowMessageHandler(LinaInboxMessageHandler):
 
 class DiceRegexpMessageHandler(LinaInboxMessageHandler):
     message_type = TextMessage
-    trigger_word = r'(\d+)[d|д|к](\d+)\s*([\+|-]\d+)?'
+    trigger_word = re.compile(r'(\d+)[dдк](\d+)\s*([+-]\d+)?')
 
     def trigger(self, event: NewMessageLongPollEvent):
-        result = re.findall(self.trigger_word, event.text)
-        print('дайсо триггер', result)
-        return result
+        return bool(self.trigger_word.match(event.text))
 
     async def get_content(self,
                           event: NewMessageLongPollEvent) -> List[Any]:
-        parse_result = re.findall(self.trigger_word, event.text)
+        parse_result = self.trigger_word.findall(event.text)
         amount, dice, modifier = map(lambda x: int(x) if x else 0,
                                      parse_result[0])
         if amount > 1000 or dice > 1000:

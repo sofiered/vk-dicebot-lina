@@ -1,4 +1,5 @@
 from enum import Enum
+from logging import getLogger
 from typing import Union
 
 
@@ -41,13 +42,16 @@ class MessageFlags(Enum):
     Hidden = 65536
 
 
+logger = getLogger('bot')
+
+
 class DefaultLongPollEvent:
     pass
 
 
 class NewMessageLongPollEvent(DefaultLongPollEvent):
     def __init__(self, *data) -> None:
-        print(data)
+        logger.info('recieving data: %s' % [data])
         self.message_id: int = data[1]
         self.flags_raw: int = data[2]
         self.flags: set = {flag for flag in MessageFlags
@@ -55,6 +59,11 @@ class NewMessageLongPollEvent(DefaultLongPollEvent):
         self.peer_id: int = data[3]
         self.text: str = data[5].lower()
         self.sender: int = int(data[6].get('from', self.peer_id))
+
+    def __repr__(self):
+        return 'sender: %s, flags: %s, text: %s' % (self.sender,
+                                                    self.flags,
+                                                    self.text)
 
 
 def long_poll_event_factory(*data) -> Union[DefaultLongPollEvent,

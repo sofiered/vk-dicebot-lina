@@ -267,7 +267,7 @@ async def main():
     bot.add_handler(handler=where_is_posts) # checked
     bot.add_handler(handler=send_cat) # checked
     bot.add_handler(handler=get_advice) # checked
-    bot.add_handler(handler=who_is_guily)
+    bot.add_handler(handler=who_is_guily) # checked
     bot.add_handler(handler=sey_hello_to_master) # checked
     bot.add_handler(handler=info) # checked
     bot.add_handler(handler=get_help)
