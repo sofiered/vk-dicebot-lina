@@ -2,7 +2,7 @@ import functools
 import random
 import re
 from itertools import chain
-from typing import Any, List, Type, Optional, Union, Tuple
+from typing import Any, List, Type, Optional, Union, Tuple, Pattern
 
 from vk_dice_roll.core.event import NewMessageLongPollEvent, MessageFlags
 from vk_dice_roll.core.handlers import InboxMessageHandler
@@ -10,7 +10,7 @@ from vk_dice_roll.core.message import TextMessage, StickerMessage, Message
 
 
 class LinaInboxMessageHandler(InboxMessageHandler):
-    trigger_word: Optional[Union[Tuple, str]] = None
+    trigger_word: Optional[Union[Tuple, Pattern, str]] = None
     message_type: Type = Type[Message]
     required_flags: Optional[set] = None
 
@@ -81,7 +81,7 @@ class DiceRegexpMessageHandler(LinaInboxMessageHandler):
     trigger_word = re.compile(r'(\d+)[dдк](\d+)\s*([+-]\d+)?')
 
     def trigger(self, event: NewMessageLongPollEvent):
-        return bool(self.trigger_word.match(event.text))
+        return self.trigger_word.search(event.text) is not None
 
     async def get_content(self,
                           event: NewMessageLongPollEvent) -> List[Any]:
@@ -224,13 +224,13 @@ class InfoMessageHandler(LinaInboxMessageHandler):
 
 class IntervalRandomMessageHandler(LinaInboxMessageHandler):
     message_type = TextMessage
-    interval_regexp = r'от\s*(\d+)\s*до\s*(\d+)?'
+    interval_regexp = re.compile(r'от\s*(\d+)\s*до\s*(\d+)?')
     trigger_word = 'рандом'
 
     async def get_content(
             self,
             event: NewMessageLongPollEvent) -> List[Any]:
-        parse_result = re.findall(self.interval_regexp, event.text)
+        parse_result = self.interval_regexp.findall(event.text)
         _min, _max = map(lambda x: int(x), parse_result[0])
         if _min > _max:
             _min, _max = _max, _min
