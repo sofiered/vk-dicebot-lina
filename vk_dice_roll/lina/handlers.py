@@ -176,10 +176,6 @@ class SayHelloMessageHandler(LinaInboxMessageHandler):
     message_type = TextMessage
     trigger_word = 'привет'
 
-    def trigger(self, event: NewMessageLongPollEvent):
-        return (self.trigger_word in event.text
-                and event.sender == self.bot.admin_id)
-
     async def get_content(self,
                           event: NewMessageLongPollEvent) -> List[Any]:
         hellos = ['Привет',
