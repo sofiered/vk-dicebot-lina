@@ -88,7 +88,7 @@ class DiceRegexpMessageHandler(LinaInboxMessageHandler):
         parse_result = self.trigger_word.findall(event.text)
         amount, dice, modifier = map(lambda x: int(x) if x else 0,
                                      parse_result[0])
-        if amount > 1000 or dice > 1000:
+        if amount + dice > 1000:
             return ['Слишком много! Я не справлюсь!']
         if amount < 1:
             return ['Я так не умею']
