@@ -42,7 +42,7 @@ class MessageFlags(Enum):
     Hidden = 65536
 
 
-logger = getLogger('bot')
+logger = getLogger('lina').getChild('history')
 
 
 class DefaultLongPollEvent:

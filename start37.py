@@ -1,7 +1,9 @@
 import asyncio
 import os
-from vk_dice_roll.lina import Lina
 
+from logging import config, getLogger
+
+from vk_dice_roll.lina import Lina
 
 
 async def main():
@@ -18,13 +20,18 @@ async def main():
         password = local_settings.PASSWORD
         secret_key = local_settings.SECRET_KEY
         admin_id = local_settings.ADMIN_KEY
+        log_config = local_settings.LOG_CONFIG
+
+        config.dictConfig(log_config)
 
     lina = Lina(app_id=app_id,
-                   login=login,
-                   password=password,
-                   admin_id=admin_id,
-                   secret_key=secret_key,
-                   names=('моли','молли'))
+                login=login,
+                password=password,
+                admin_id=admin_id,
+                secret_key=secret_key,
+                names=('моли', 'молли'),
+                logger=getLogger('lina'))
+
     await lina.start()
 
 
