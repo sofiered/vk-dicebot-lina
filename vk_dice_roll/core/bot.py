@@ -97,7 +97,7 @@ class VkBot:
 
     async def process_message(self, message: Union[TextMessage,
                                                    StickerMessage]):
-        self.log.info('process message: %s' % message)
+        self.log.info('send message: %s' % message)
         if isinstance(message, TextMessage):
             await self.api.messages.send(peer_id=message.recipient_id,
                                          random_id=randint(10000, 99999),
