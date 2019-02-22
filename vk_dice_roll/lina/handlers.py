@@ -1,4 +1,3 @@
-import functools
 import random
 import re
 from itertools import chain
@@ -78,7 +77,7 @@ class MeowMessageHandler(LinaInboxMessageHandler):
 
 class DiceRegexpMessageHandler(LinaInboxMessageHandler):
     message_type = TextMessage
-    trigger_word = re.compile(r'(\d+)[dдк](\d+)\s*([+-]\d+)?')
+    trigger_word = re.compile(r'(\d+)[dдк](\d+)\s*([xх/*+-]\d+)?')
 
     def trigger(self, event: NewMessageLongPollEvent):
         return self.trigger_word.search(event.text) is not None
@@ -86,8 +85,13 @@ class DiceRegexpMessageHandler(LinaInboxMessageHandler):
     async def get_content(self,
                           event: NewMessageLongPollEvent) -> List[Any]:
         parse_result = self.trigger_word.findall(event.text)
-        amount, dice, modifier = map(lambda x: int(x) if x else 0,
-                                     parse_result[0])
+        # amount, dice, modifier = map(lambda x: int(x) if x else 0,
+        #                              parse_result[0])
+
+        amount: int = int(parse_result[0][0])
+        dice: int = int(parse_result[0][1])
+        modifier: str = parse_result[0][2]
+
         if amount + dice > 1000:
             return ['Слишком много! Я не справлюсь!']
         if amount < 1:
@@ -97,11 +101,23 @@ class DiceRegexpMessageHandler(LinaInboxMessageHandler):
         dice_pool = [random.SystemRandom().randint(1, dice)
                      if not (self.bot.is_cheating and 'ч' in event.text)
                      else dice for _ in range(amount)]
-        result = '(%s)%s = %s' % (' + '.join(map(str, dice_pool)),
-                                  (modifier if modifier < 0
-                                   else '+%s' % modifier) if modifier else '',
-                                  functools.reduce(lambda x, y: x + y,
-                                                   dice_pool) + modifier)
+        pool_result_str = ' + '.join(map(str, dice_pool))
+        pool_result_int = sum(dice_pool)
+        number_modifier = int(modifier[1:])
+        if modifier.startswith('+'):
+            throw_result = str(pool_result_int + number_modifier)
+        elif modifier.startswith('-'):
+            throw_result = str(pool_result_int - number_modifier)
+        elif modifier.startswith('/'):
+            throw_result = format(pool_result_int / number_modifier, '.2f')
+        elif modifier.startswith(('x', 'х', '*')):
+            throw_result = str(pool_result_int * number_modifier)
+        else:
+            throw_result = str(pool_result_int)
+
+        result = '(%s)%s = %s' % (pool_result_str,
+                                  modifier,
+                                  throw_result)
         return [result]
 
 
@@ -115,7 +131,6 @@ class CheatSwitcherMessageHandler(LinaInboxMessageHandler):
     async def _handle(self, type_class: Type[Message],
                       event: NewMessageLongPollEvent) -> Message:
         self.bot.is_cheating = not self.bot.is_cheating
-        print('читер', type_class)
         return await super()._handle(type_class, event)
 
     async def get_content(self,

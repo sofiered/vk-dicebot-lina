@@ -4,6 +4,7 @@ import os
 from logging import config, getLogger
 
 from vk_dice_roll.lina import Lina
+from vk_dice_roll.core.utils import create_logger
 
 
 async def main():
@@ -13,6 +14,7 @@ async def main():
         password = os.environ.get('PASSWORD', '')
         secret_key = os.environ.get('SECRET_KEY')
         admin_id = int(os.environ.get('ADMIN_KEY'))
+        logger = create_logger()
     else:
         import local_settings
         app_id = local_settings.APP_ID
@@ -20,9 +22,13 @@ async def main():
         password = local_settings.PASSWORD
         secret_key = local_settings.SECRET_KEY
         admin_id = local_settings.ADMIN_KEY
-        log_config = local_settings.LOG_CONFIG
+        if hasattr(local_settings, 'LOG_CONFIG'):
+            log_config = local_settings.LOG_CONFIG
+            config.dictConfig(log_config)
+            logger = getLogger('lina')
+        else:
+            logger = create_logger()
 
-        config.dictConfig(log_config)
 
     lina = Lina(app_id=app_id,
                 login=login,
@@ -30,7 +36,7 @@ async def main():
                 admin_id=admin_id,
                 secret_key=secret_key,
                 names=('моли', 'молли'),
-                logger=getLogger('lina'))
+                logger=logger)
 
     await lina.start()
 
