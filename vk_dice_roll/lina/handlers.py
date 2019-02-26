@@ -103,7 +103,7 @@ class DiceRegexpMessageHandler(LinaInboxMessageHandler):
                      else dice for _ in range(amount)]
         pool_result_str = ' + '.join(map(str, dice_pool))
         pool_result_int = sum(dice_pool)
-        number_modifier = int(modifier[1:])
+        number_modifier = int(modifier[1:]) if modifier != '' else 0
         if modifier.startswith('+'):
             throw_result = str(pool_result_int + number_modifier)
         elif modifier.startswith('-'):
