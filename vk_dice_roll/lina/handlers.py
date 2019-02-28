@@ -6,6 +6,7 @@ from typing import Any, List, Type, Optional, Union, Tuple, Pattern
 from vk_dice_roll.core.event import NewMessageLongPollEvent, MessageFlags
 from vk_dice_roll.core.handlers import InboxMessageHandler
 from vk_dice_roll.core.message import TextMessage, StickerMessage, Message
+from .errors import LinaError
 
 
 class LinaInboxMessageHandler(InboxMessageHandler):
@@ -25,6 +26,12 @@ class LinaInboxMessageHandler(InboxMessageHandler):
 
     async def get_type_class(self):
         return self.message_type
+
+    async def handle(self, event: NewMessageLongPollEvent):
+        try:
+            await super().handle(event=event)
+        except LinaError:
+            await self.bot.send_error_sticker(event.peer_id)
 
     async def _handle(
             self,
@@ -93,11 +100,11 @@ class DiceRegexpMessageHandler(LinaInboxMessageHandler):
         modifier: str = parse_result[0][2]
 
         if amount + dice > 1000:
-            return ['Слишком много! Я не справлюсь!']
+            raise LinaError
         if amount < 1:
-            return ['Я так не умею']
+            raise LinaError
         if dice < 1:
-            return ['У меня нет с собой %s-стороннего дайса' % dice]
+            raise LinaError
         dice_pool = [random.SystemRandom().randint(1, dice)
                      if not (self.bot.is_cheating and 'ч' in event.text)
                      else dice for _ in range(amount)]

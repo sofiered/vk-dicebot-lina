@@ -14,3 +14,7 @@ class Lina(VkBot):
 
     async def process_outbox_message(self, event: NewMessageLongPollEvent):
         pass
+
+    async def send_error_sticker(self, peer_id: int):
+        await self.send_sticker(peer_id=peer_id,
+                                sticker_id=8471)
