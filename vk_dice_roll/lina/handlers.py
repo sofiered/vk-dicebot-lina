@@ -29,7 +29,7 @@ class LinaInboxMessageHandler(InboxMessageHandler):
 
     async def handle(self, event: NewMessageLongPollEvent):
         try:
-            await super().handle(event=event)
+            return await super().handle(event=event)
         except LinaError:
             await self.bot.send_error_sticker(event.peer_id)
 
@@ -73,12 +73,16 @@ class MeowMessageHandler(LinaInboxMessageHandler):
         misti_ids = range(5701, 5745)
         seth_ids = range(6109, 6156)
         lovely_ids = range(7096, 7143)
+        pair_id = range(11607, 11654)
+        snow_id = range(11238, 11285)
 
         cats_id = [cat for cat in chain(peachy_ids,
                                         rumka_ids,
                                         misti_ids,
                                         seth_ids,
-                                        lovely_ids)]
+                                        lovely_ids,
+                                        pair_id,
+                                        snow_id)]
         return [random.choice(cats_id)]
 
 
